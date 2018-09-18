@@ -1,0 +1,16 @@
+version: '3'
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      LANG: en_US.UTF-8
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_DATABASE: geonames
+      MYSQL_USER: geonames
+      MYSQL_PASSWORD: geonames
+    ports:
+      - 3306:3306
+    volumes:
+      - ./import:/docker-entrypoint-initdb.d
+      - ./export:/export
