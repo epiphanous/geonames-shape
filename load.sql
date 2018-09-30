@@ -33,7 +33,8 @@ create table `country_info` (
   `postalcoderegex` varchar(255),
   `gid` bigint,
   primary key (`country_code`),
-  key `ci_continent_code_key` (`continent_code`)
+  key `ci_continent_code_key` (`continent_code`),
+  unique key `ci_gid_ukey` (`gid`)
 ) engine=innodb default charset=utf8mb4 ;
 
 create table `country_language` (
@@ -70,7 +71,7 @@ create table `feature` (
   `admin4_code` varchar(20),
   `parent_continent` bigint,
   `parent_country` bigint,
-  `parent_admin1` bigint,
+  `parent_admin1` bigint, -- foreign keys
   `parent_admin2` bigint,
   `parent_admin3` bigint,
   `parent_admin4` bigint,
@@ -217,7 +218,7 @@ update feature set continent_code = 'AN' where gid = 6255152;
 COMMIT;
 BEGIN;
 
--- set continent codes
+-- set continent codes, parent continents and countries
 update feature f join country_info ci on ci.country_code=f.country_code
 set f.continent_code = ci.continent_code
 set f.parent_country = ci.gid
@@ -233,11 +234,17 @@ set f.parent_continent =
   end
 ;
 
+COMMIT;
+BEGIN;
+
 -- set adm1 parents
 update feature fc
   join feature fp on fp.admin1_code=fc.admin1_code and fp.fcode='ADM1'
 set fc.parent_admin1 = fp.gid
 ;
+
+COMMIT;
+BEGIN;
 
 -- set adm2 parents
 update feature fc
@@ -245,11 +252,17 @@ update feature fc
 set fc.parent_admin2 = fp.gid
 ;
 
+COMMIT;
+BEGIN;
+
 -- set adm3 parents
 update feature fc
   join feature fp on fp.admin3_code=fc.admin3_code and fp.fcode='ADM3'
 set fc.parent_admin3 = fp.gid
 ;
+
+COMMIT;
+BEGIN;
 
 -- set adm4 parents
 update feature fc
@@ -257,153 +270,4 @@ update feature fc
 set fc.parent_admin4 = fp.gid
 ;
 
-
--- create feature parent table
-create table feature_parent as
-select F.*,H.child_gid
-from feature F join hierarchy H on H.parent_gid=F.gid
-;
-
 COMMIT;
-BEGIN;
-
---
--- use the parent feature table to update features with admin hierarchy
---
-
--- fill in cont for cont children
-update feature FC join feature_parent FP on FC.gid = FP.child_gid
-set
-  FC.parent_continent = FP.gid,
-  FC.continent_code = FP.continent_code
-where FP.fcode = 'CONT'
-;
-
-COMMIT;
-BEGIN;
-
--- recreate feature parent table with new data
-drop table feature_parent;
-create table feature_parent as
-select F.*,H.child_gid
-from feature F join hierarchy H on H.parent_gid=F.gid
-;
-
-COMMIT;
-BEGIN;
-
--- fill in cont,country for country children
-update feature FC join feature_parent FP on FC.gid = FP.child_gid
-set
-  FC.parent_continent = FP.parent_continent,
-  FC.continent_code = FP.continent_code,
-  FC.parent_country = FP.gid
-where FP.fcode = 'PCLI'
-;
-
-COMMIT;
-BEGIN;
-
--- recreate feature parent table with new data
-drop table feature_parent;
-create table feature_parent as
-select F.*,H.child_gid
-from feature F join hierarchy H on H.parent_gid=F.gid
-;
-
-COMMIT;
-BEGIN;
-
--- fill in cont,country,admin1 for admin1 children
-update feature FC join feature_parent FP on FC.gid = FP.child_gid
-set
-  FC.parent_continent = FP.parent_continent,
-  FC.continent_code = FP.continent_code,
-  FC.parent_country = FP.parent_country,
-  FC.parent_admin1 = FP.gid
-where FP.fcode = 'ADM1'
-;
-
-COMMIT;
-BEGIN;
-
--- recreate feature parent table with new data
-drop table feature_parent;
-create table feature_parent as
-select F.*,H.child_gid
-from feature F join hierarchy H on H.parent_gid=F.gid
-;
-
-COMMIT;
-BEGIN;
-
--- fill in cont,country,admin1,admin2 for admin2 children
-update feature FC join feature_parent FP on FC.gid = FP.child_gid
-set
-  FC.parent_continent = FP.parent_continent,
-  FC.continent_code = FP.continent_code,
-  FC.parent_country = FP.parent_country,
-  FC.parent_admin1 = FP.parent_admin1,
-  FC.parent_admin2 = FP.gid
-where FP.fcode = 'ADM2'
-;
-
-COMMIT;
-BEGIN;
-
--- recreate feature parent table with new data
-drop table feature_parent;
-create table feature_parent as
-select F.*,H.child_gid
-from feature F join hierarchy H on H.parent_gid=F.gid
-;
-
-COMMIT;
-BEGIN;
-
--- fill in cont,country,admin1,admin2,admin3 for admin3 children
-update feature FC join feature_parent FP on FC.gid = FP.child_gid
-set
-  FC.parent_continent = FP.parent_continent,
-  FC.continent_code = FP.continent_code,
-  FC.parent_country = FP.parent_country,
-  FC.parent_admin1 = FP.parent_admin1,
-  FC.parent_admin2 = FP.parent_admin2,
-  FC.parent_admin3 = FP.gid
-where FP.fcode = 'ADM3'
-;
-
-COMMIT;
-BEGIN;
-
--- recreate feature parent table with new data
-drop table feature_parent;
-create table feature_parent as
-select F.*,H.child_gid
-from feature F join hierarchy H on H.parent_gid=F.gid
-;
-
-COMMIT;
-BEGIN;
-
--- fill in cont,country,admin1,admin2,admin3,admin4 for admin4 children
-update feature FC join feature_parent FP on FC.gid = FP.child_gid
-set
-  FC.parent_continent = FP.parent_continent,
-  FC.continent_code = FP.continent_code,
-  FC.parent_country = FP.parent_country,
-  FC.parent_admin1 = FP.parent_admin1,
-  FC.parent_admin2 = FP.parent_admin2,
-  FC.parent_admin3 = FP.parent_admin3,
-  FC.parent_admin4 = FP.gid
-where FP.fcode = 'ADM4'
-;
-
-COMMIT;
-BEGIN;
-
-drop table feature_parent;
-delete from hierarchy where `type`='ADM';
-
-COMMIT;
-BEGIN;
