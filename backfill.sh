@@ -2,8 +2,8 @@
 
 IMPORT=import
 EXPORT=export
-mkdir -p $IMPORT
-mkdir -p $EXPORT
+mkdir -p $IMPORT && rm -rf $IMPORT/*
+mkdir -p $EXPORT && rm -rf $EXPORT/*
 
 download_data() {
   GN_BASE="http://download.geonames.org/export/dump"
@@ -65,12 +65,13 @@ gen_language() {
   sed -e '1d' "$IMPORT/iso-languagecodes.txt" | awk -F '\t' -f language.awk >> "$IMPORT/language.txt"
 }
 
-download_data          && \
-gen_country_info       && \
-gen_country_language   && \
-gen_country_neighbour  && \
-gen_feature_class_code && \
-gen_language           &&  \
-echo "DONE"
-
-
+download_data           && \
+gen_country_info        && \
+gen_country_language    && \
+gen_country_neighbour   && \
+gen_feature_class_code  && \
+gen_language            && \
+cp -f load.sql import   && \
+docker-compose down     && \
+docker-compose up       && \
+echo "*** DONE BACKFILL ***"
