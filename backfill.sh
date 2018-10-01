@@ -2,8 +2,8 @@
 
 IMPORT=import
 EXPORT=export
-mkdir -p $IMPORT && rm -rf $IMPORT/*
-mkdir -p $EXPORT && rm -rf $EXPORT/*
+mkdir -p $IMPORT
+mkdir -p $EXPORT
 
 download_data() {
   GN_BASE="http://download.geonames.org/export/dump"
@@ -71,7 +71,7 @@ gen_country_language    && \
 gen_country_neighbour   && \
 gen_feature_class_code  && \
 gen_language            && \
-cp -f load.sql import   && \
+cp -f 001-schema.sql 002-load.sh import   && \
 docker-compose down     && \
 docker-compose up       && \
 echo "*** DONE BACKFILL ***"
