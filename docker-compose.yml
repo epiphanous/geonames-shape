@@ -1,14 +1,14 @@
 version: '3'
 services:
   db:
-    image: mysql:5.7
+    image: postgres:latest
     restart: always
     environment:
       LANG: en_US.UTF-8
-      MYSQL_ROOT_PASSWORD: 123
-      MYSQL_DATABASE: geonames
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: geonames
     ports:
-      - 3306:3306
+      - 5432:5432
     volumes:
       - ./import:/docker-entrypoint-initdb.d
       - ./export:/export

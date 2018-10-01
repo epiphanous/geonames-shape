@@ -2,7 +2,7 @@
 
 IMPORT=import
 EXPORT=export
-mkdir -p $IMPORT
+mkdir -p $IMPORT && rm -f $IMPORT/*.{sql,sh}
 mkdir -p $EXPORT && rm -f $EXPORT/*.txt
 
 download_data() {
@@ -27,16 +27,20 @@ download_data() {
 
 gen_country_info() {
   sed -e '/^#/d' "$IMPORT/countryInfo.txt" | csvcut -t -H -c 1,5-15,17 | csvformat -K 1 -T > "$IMPORT/country_info.txt"
+  cp "$IMPORT/country_info.txt" $EXPORT
 }
 
+# gen straight to export
 gen_country_language() {
-  sed -e '/^#/d' "$IMPORT/countryInfo.txt" | csvcut -t -H -c 1,16 | csvformat -K 1 -T | awk -F '\t' -f two_split_comma.awk > "$IMPORT/country_language.txt"
+  sed -e '/^#/d' "$IMPORT/countryInfo.txt" | csvcut -t -H -c 1,16 | csvformat -K 1 -T | awk -F '\t' -f two_split_comma.awk > "$EXPORT/country_language.txt"
 }
 
+# gen straight to export
 gen_country_neighbour() {
-  sed -e '/^#/d' "$IMPORT/countryInfo.txt" | csvcut -t -H -c 1,18 | csvformat -K 1 -T | awk -F '\t' -f two_split_comma.awk > "$IMPORT/country_neighbour.txt"
+  sed -e '/^#/d' "$IMPORT/countryInfo.txt" | csvcut -t -H -c 1,18 | csvformat -K 1 -T | awk -F '\t' -f two_split_comma.awk > "$EXPORT/country_neighbour.txt"
 }
 
+# gen straight to export
 gen_feature_class_code() {
   {
     printf "A\tAdministrative Regions\tcountry, state, region, ...\n"
@@ -48,10 +52,11 @@ gen_feature_class_code() {
     printf "T\tHypsographic Features\tmountain, hill, rock, ...\n"
     printf "U\tUndersea Features\tundersea features\n"
     printf "V\tVegetation Features\tforest, heath, ...\n"
-  } > "$IMPORT/feature_class_code.txt"
-  sed -e 's/^[AHLPRSTUV]\.//' "$IMPORT/featureCodes_en.txt" >> "$IMPORT/feature_class_code.txt"
+  } > "$EXPORT/feature_class_code.txt"
+  sed -e 's/^[AHLPRSTUV]\.//' "$IMPORT/featureCodes_en.txt" >> "$EXPORT/feature_class_code.txt"
 }
 
+# gen straight to export
 gen_language() {
   {
     printf "post\tpostal code\n"
@@ -61,8 +66,8 @@ gen_language() {
     printf "faac\tfaac airport code\n"
     printf "abbr\tabbreviation\n"
     printf "fr_1793\tname used during French Revolution\n" # wtf?
-  } > "$IMPORT/language.txt"
-  sed -e '1d' "$IMPORT/iso-languagecodes.txt" | awk -F '\t' -f language.awk >> "$IMPORT/language.txt"
+  } > "$EXPORT/language.txt"
+  sed -e '1d' "$IMPORT/iso-languagecodes.txt" | awk -F '\t' -f language.awk >> "$EXPORT/language.txt"
 }
 
 download_data           && \
@@ -74,5 +79,5 @@ gen_language            && \
 cp -f my.cnf 001-load.sh 002-export.sh $IMPORT && \
 cp -f my.cnf $EXPORT    && \
 docker-compose down     && \
-docker-compose up       && \
-echo "*** DONE BACKFILL ***"
+docker-compose up       #&& \
+#echo "*** DONE BACKFILL ***"

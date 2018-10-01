@@ -44,25 +44,6 @@ create table country_info (
   unique key ci_gid_ukey (gid)
 ) engine=myisam default charset=utf8mb4 ;
 
-create table country_language (
-  country_code char(2) not null,
-  lang_code varchar(7) not null,
-  primary key (country_code, lang_code)
-) engine=myisam default charset=utf8mb4;
-
-create table country_neighbour (
-  country_code char(2) not null,
-  neighbour_code char(2) not null,
-  primary key (country_code, neighbour_code)
-) engine=myisam default charset=utf8mb4;
-
-create table feature_class_code (
-  code char(7) not null,
-  name varchar(200) not null,
-  description text,
-  primary key code (code)
-) engine=myisam default charset=utf8mb4 ;
-
 create table feature (
   gid bigint not null,
   name varchar(200),
@@ -98,19 +79,11 @@ create table feature (
   key f_admin4_code_key (admin4_code)
 ) engine=myisam default charset=utf8mb4 ;
 
-create table language (
-  lang_code varchar(7) primary key,
-  name varchar(200) not null
-) engine=myisam default charset=utf8mb4 ;
 EOF
 ) || exit $?
 
-# load small files
-for t in feature_class_code country_info country_neighbour language
-do
-  echo "loading $t"
-  time (echo "load data local infile '$BASE/$t.txt' into table $t character set 'utf8'" | $MSQL) || exit $?
-done
+echo "loading country_info..."
+time (echo "load data local infile '$BASE/country_info.txt' into table country_info character set 'utf8'" | $MSQL) || exit $?
 
 echo "loading alternateNamesV2"
 (
