@@ -35,7 +35,7 @@ create table country_info (
   tld char(3),
   currency_code char(3),
   currencyname char(20),
-  phone char(10),
+  phone varchar(20),
   postalcodeformat varchar(100),
   postalcoderegex varchar(255),
   gid bigint,
