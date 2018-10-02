@@ -7,8 +7,6 @@ services:
       LANG: en_US.UTF-8
       MYSQL_ROOT_PASSWORD: 123
       MYSQL_DATABASE: geonames
-      MYSQL_USER: geonames
-      MYSQL_PASSWORD: geonames
     ports:
       - 3306:3306
     volumes:

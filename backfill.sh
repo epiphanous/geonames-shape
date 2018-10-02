@@ -3,13 +3,13 @@
 IMPORT=import
 EXPORT=export
 mkdir -p $IMPORT
-mkdir -p $EXPORT
+mkdir -p $EXPORT && rm -f $EXPORT/*.txt
 
 download_data() {
   GN_BASE="http://download.geonames.org/export/dump"
 
   TXT="countryInfo.txt featureCodes_en.txt"
-  ZIPS="alternateNamesV2.zip allCountries.zip hierarchy.zip"
+  ZIPS="alternateNamesV2.zip allCountries.zip"
 
   (
     cd $IMPORT
@@ -20,7 +20,7 @@ download_data() {
 
     for f in $ZIPS
     do
-      wget -q -N --show-progress "$GN_BASE/$f" && unzip -o $f
+      wget -q -N --show-progress "$GN_BASE/$f" && unzip -u $f
     done
   )
 }
@@ -65,12 +65,14 @@ gen_language() {
   sed -e '1d' "$IMPORT/iso-languagecodes.txt" | awk -F '\t' -f language.awk >> "$IMPORT/language.txt"
 }
 
-download_data          && \
-gen_country_info       && \
-gen_country_language   && \
-gen_country_neighbour  && \
-gen_feature_class_code && \
-gen_language           &&  \
-echo "DONE"
-
-
+download_data           && \
+gen_country_info        && \
+gen_country_language    && \
+gen_country_neighbour   && \
+gen_feature_class_code  && \
+gen_language            && \
+cp -f my.cnf 001-load.sh 002-export.sh $IMPORT && \
+cp -f my.cnf $EXPORT    && \
+docker-compose down     && \
+docker-compose up       && \
+echo "*** DONE BACKFILL ***"
