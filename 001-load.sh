@@ -26,7 +26,7 @@ create table alt_name (
 ) engine=myisam default charset=utf8mb4 ;
 
 create table country_info (
-  country_code char(2),
+  country_code char(2) not null,
   name varchar(200),
   capital varchar(200),
   area double,
@@ -88,8 +88,8 @@ time (echo "load data local infile '$BASE/country_info.txt' into table country_i
 echo "loading alternateNamesV2"
 (
   time $MSQL<<EOF
-load data local infile '$BASE/alternateNamesV2.txt'
-into table alt_name
+load data local infile '$BASE/alternateNamesV2_nulls.txt'
+  into table alt_name character set 'utf8mb4'
   (id,gid,code,name,is_preferred,is_short,is_colloquial,is_historic)
 EOF
 ) || exit $?
@@ -97,12 +97,11 @@ EOF
 echo "loading allCountries"
 (
   time $MSQL <<EOF
-load data local infile '$BASE/allCountries.txt'
-into table feature
-(gid, name, @dummy, @dummy,
- latitude, longitude, fclass, fcode, country_code, @dummy,
- admin1_code, admin2_code, admin3_code, admin4_code, population,
- elevation, dem, timezone, mod_date)
+load data local infile '$BASE/allCountries_nulls.txt'
+  into table feature character set 'utf8mb4'
+  (gid, name, @dummy, @dummy, latitude, longitude, fclass, fcode,
+  country_code, @dummy, admin1_code, admin2_code, admin3_code,
+  admin4_code, population, elevation, dem, timezone, mod_date)
 EOF
 ) || exit $?
 
