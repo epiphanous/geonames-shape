@@ -83,7 +83,7 @@ EOF
 ) || exit $?
 
 echo "loading country_info..."
-time (echo "load data local infile '$BASE/country_info.txt' into table country_info character set 'utf8'" | $MSQL) || exit $?
+time (echo "load data local infile '$BASE/country_info.txt' into table country_info character set 'utf8mb4'" | $MSQL) || exit $?
 
 echo "loading alternateNamesV2"
 (
