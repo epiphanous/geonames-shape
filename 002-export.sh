@@ -3,27 +3,20 @@
 BASE=/export
 MSQL="mysql --defaults-extra-file=$BASE/my.cnf -B ${MYSQL_DATABASE}"
 
-rowCount() {
-  q="$*"
-  cq=$(echo "$q" | sed -e 's/^.* from /select count(*) from /')
-  # (>&2 echo "running: $cq")
-  echo "$cq" | $MSQL -N
-}
-
 dump_pages() {
   q=$1
-  ps=25000
-  p=0
-  n=$(rowCount $q)
-  # (>&2 echo "$n rows from $q")
-  offset=0
+  d=$(echo "$q" | sed -e 's/^select .* from /delete from /')
+  lim=10000
+  n=0
   cmd=$MSQL
-  while [ $((n - offset)) -ge 0 ]
+  foundSome=$lim
+  while [ $foundSome -eq $lim ]
   do
-    (>&2 echo $offset)
-    echo "$q limit $offset, $ps" | $cmd
-    ((offset += ps))
+    echo "$q limit $lim" | $cmd
     cmd="$MSQL -N"
+    foundSome=$(echo "$d limit $lim; select row_count();" | $cmd)
+    let "n += $foundSome"
+    (>&2 echo $n)
   done
 }
 

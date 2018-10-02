@@ -79,5 +79,5 @@ gen_language            && \
 cp -f my.cnf 001-load.sh 002-export.sh $IMPORT && \
 cp -f my.cnf $EXPORT    && \
 docker-compose down     && \
-docker-compose up       #&& \
-#echo "*** DONE BACKFILL ***"
+docker-compose up       && \
+echo "*** DONE BACKFILL ***"
