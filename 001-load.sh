@@ -7,26 +7,22 @@ MSQL="mysql --defaults-extra-file=$BASE/my.cnf ${MYSQL_DATABASE}"
 echo "creating schema..."
 (
   time $MSQL<<EOF
-drop database if exists geonames;
-create database geonames default character set utf8mb4 ;
-use geonames;
-
 create table alt_name (
   id bigint not null,
   gid bigint not null,
   code varchar(7),
   name varchar(400) not null,
-  is_preferred tinyint(1),
-  is_short tinyint(1),
-  is_colloquial tinyint(1),
-  is_historic tinyint(1),
+  is_preferred tinyint(1) not null default 0,
+  is_short tinyint(1) not null default 0,
+  is_colloquial tinyint(1) not null default 0,
+  is_historic tinyint(1) not null default 0,
   primary key (id),
-  key an_gid (gid),
-  key an_code (code)
+  key an_code (code),
+  key an_historic (is_historic)
 ) engine=myisam default charset=utf8mb4 ;
 
 create table country_info (
-  country_code char(2),
+  country_code char(2) not null,
   name varchar(200),
   capital varchar(200),
   area double,
@@ -35,32 +31,13 @@ create table country_info (
   tld char(3),
   currency_code char(3),
   currencyname char(20),
-  phone char(10),
+  phone varchar(20),
   postalcodeformat varchar(100),
   postalcoderegex varchar(255),
   gid bigint,
   primary key (country_code),
   key ci_continent_code_key (continent_code),
   unique key ci_gid_ukey (gid)
-) engine=myisam default charset=utf8mb4 ;
-
-create table country_language (
-  country_code char(2) not null,
-  lang_code varchar(7) not null,
-  primary key (country_code, lang_code)
-) engine=myisam default charset=utf8mb4;
-
-create table country_neighbour (
-  country_code char(2) not null,
-  neighbour_code char(2) not null,
-  primary key (country_code, neighbour_code)
-) engine=myisam default charset=utf8mb4;
-
-create table feature_class_code (
-  code char(7) not null,
-  name varchar(200) not null,
-  description text,
-  primary key code (code)
 ) engine=myisam default charset=utf8mb4 ;
 
 create table feature (
@@ -70,12 +47,12 @@ create table feature (
   longitude decimal(10,7),
   fclass char(1),
   fcode varchar(10),
-  continent_code char(2),
-  country_code char(2),
-  admin1_code varchar(20),
-  admin2_code varchar(80),
-  admin3_code varchar(20),
-  admin4_code varchar(20),
+  continent_code char(2) not null default '',
+  country_code char(2) not null default '',
+  admin1_code varchar(20) not null default '',
+  admin2_code varchar(80) not null default '',
+  admin3_code varchar(20) not null default '',
+  admin4_code varchar(20) not null default '',
   parent_continent bigint,
   parent_country bigint,
   parent_admin1 bigint,
@@ -98,25 +75,17 @@ create table feature (
   key f_admin4_code_key (admin4_code)
 ) engine=myisam default charset=utf8mb4 ;
 
-create table language (
-  lang_code varchar(7) primary key,
-  name varchar(200) not null
-) engine=myisam default charset=utf8mb4 ;
 EOF
 ) || exit $?
 
-# load small files
-for t in feature_class_code country_info country_neighbour language
-do
-  echo "loading $t"
-  time (echo "load data local infile '$BASE/$t.txt' into table $t character set 'utf8'" | $MSQL) || exit $?
-done
+echo "loading country_info..."
+time (echo "load data local infile '$BASE/country_info.txt' into table country_info character set 'utf8mb4'" | $MSQL) || exit $?
 
 echo "loading alternateNamesV2"
 (
   time $MSQL<<EOF
-load data local infile '$BASE/alternateNamesV2.txt'
-into table alt_name
+load data local infile '$BASE/alternateNamesV2_nulls.txt'
+  into table alt_name character set 'utf8mb4'
   (id,gid,code,name,is_preferred,is_short,is_colloquial,is_historic)
 EOF
 ) || exit $?
@@ -124,12 +93,11 @@ EOF
 echo "loading allCountries"
 (
   time $MSQL <<EOF
-load data local infile '$BASE/allCountries.txt'
-into table feature
-(gid, name, @dummy, @dummy,
- latitude, longitude, fclass, fcode, country_code, @dummy,
- admin1_code, admin2_code, admin3_code, admin4_code, population,
- elevation, dem, timezone, mod_date)
+load data local infile '$BASE/allCountries_nulls.txt'
+  into table feature character set 'utf8mb4'
+  (gid, name, @dummy, @dummy, latitude, longitude, fclass, fcode,
+  country_code, @dummy, admin1_code, admin2_code, admin3_code,
+  admin4_code, population, elevation, dem, timezone, mod_date)
 EOF
 ) || exit $?
 
