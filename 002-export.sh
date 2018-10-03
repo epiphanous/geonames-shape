@@ -7,7 +7,7 @@ UTF8="SET CHARSET utf8mb4"
 dump_pages() {
   q=$1
   f=$2
-  mkdir -p $f && rm -rf $f/* || exit $?
+  mkdir -p $f || exit $?
   d=$(echo "$q" | sed -e 's/^select .* from /delete from /')
   echo "f:   $f"
   echo "q:   $q"
