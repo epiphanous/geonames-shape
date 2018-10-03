@@ -7,22 +7,18 @@ MSQL="mysql --defaults-extra-file=$BASE/my.cnf ${MYSQL_DATABASE}"
 echo "creating schema..."
 (
   time $MSQL<<EOF
-drop database if exists geonames;
-create database geonames default character set utf8mb4 ;
-use geonames;
-
 create table alt_name (
   id bigint not null,
   gid bigint not null,
   code varchar(7),
   name varchar(400) not null,
-  is_preferred tinyint(1),
-  is_short tinyint(1),
-  is_colloquial tinyint(1),
-  is_historic tinyint(1),
+  is_preferred tinyint(1) not null default 0,
+  is_short tinyint(1) not null default 0,
+  is_colloquial tinyint(1) not null default 0,
+  is_historic tinyint(1) not null default 0,
   primary key (id),
-  key an_gid (gid),
-  key an_code (code)
+  key an_code (code),
+  key an_historic (is_historic)
 ) engine=myisam default charset=utf8mb4 ;
 
 create table country_info (
@@ -51,12 +47,12 @@ create table feature (
   longitude decimal(10,7),
   fclass char(1),
   fcode varchar(10),
-  continent_code char(2),
-  country_code char(2),
-  admin1_code varchar(20),
-  admin2_code varchar(80),
-  admin3_code varchar(20),
-  admin4_code varchar(20),
+  continent_code char(2) not null default '',
+  country_code char(2) not null default '',
+  admin1_code varchar(20) not null default '',
+  admin2_code varchar(80) not null default '',
+  admin3_code varchar(20) not null default '',
+  admin4_code varchar(20) not null default '',
   parent_continent bigint,
   parent_country bigint,
   parent_admin1 bigint,

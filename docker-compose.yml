@@ -12,3 +12,4 @@ services:
     volumes:
       - ./import:/docker-entrypoint-initdb.d
       - ./export:/export
+    command: --character-set-server=utf8mb4

@@ -1,41 +1,41 @@
 #!/usr/bin/env bash
 
 BASE=/export
-MSQL="mysql --defaults-extra-file=$BASE/my.cnf -B ${MYSQL_DATABASE}"
+MSQL="mysql --defaults-extra-file=$BASE/my.cnf ${MYSQL_DATABASE}"
+UTF8="SET CHARSET utf8mb4"
 
 dump_pages() {
   q=$1
+  f=$2
+  mkdir -p $f && rm -rf $f/* || exit $?
   d=$(echo "$q" | sed -e 's/^select .* from /delete from /')
-  lim=10000
+  echo "f:   $f"
+  echo "q:   $q"
+  echo "d:   $d"
+  lim=50000
+  echo lim: $lim
   n=0
-  cmd=$MSQL
   foundSome=$lim
+  k=1
+  cmd=$MSQL
   while [ $foundSome -eq $lim ]
   do
-    echo "$q limit $lim" | $cmd
+    kx=$(printf "%03d" $k)
+    echo "$UTF8; $q limit $lim" | $cmd > $f/$kx.txt
     cmd="$MSQL -N"
     foundSome=$(echo "$d limit $lim; select row_count();" | $cmd)
     let "n += $foundSome"
-    (>&2 echo $n)
+    let "k += 1"
+    printf $'%8d\n' $n
   done
 }
 
-for t in country_info feature
+for t in country_info feature alt_name
 do
   echo "exporting $t..."
   time (
-    dump_pages "select * from $t" > "$BASE/$t.txt"
+    dump_pages "select * from $t" "$BASE/$t"
   )
 done
-
-echo "exporting alt_name..."
-time (
-  dump_pages "select gid, code, name from alt_name where code not in ('link','fr_1793') and is_historic=0" > "$BASE/alt_name.txt"
-)
-
-echo "exporting links..."
-time (
-  dump_pages "select gid, name as link from alt_name where code='link'" > "$BASE/link.txt"
-)
 
 echo "export done"
