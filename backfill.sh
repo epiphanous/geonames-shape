@@ -3,7 +3,7 @@
 IMPORT=import
 EXPORT=export
 mkdir -p $IMPORT && rm -f $IMPORT/*.{sql,sh}
-mkdir -p $EXPORT && rm -f $EXPORT/*.txt
+mkdir -p $EXPORT && rm -rf $EXPORT/*
 
 download_data() {
   GN_BASE="http://download.geonames.org/export/dump"
